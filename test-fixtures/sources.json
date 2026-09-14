@@ -1,0 +1,18 @@
+{
+  "willa-optima-plot.png": {
+    "pageUrl": "https://www.extradom.pl/projekt-domu-willa-optima-1-WAW1192",
+    "sourceUrl": "https://wpcdn.pl/extradom/designs/76878/666007/090413ededb1d8be11a7c370ab08642361bc35f29aa100b8909820c5955537d1.png",
+    "locationImageSelector": ".location__image img[data-name=\"dzialka\"], .location__image img",
+    "meterWidth": 19.77,
+    "meterHeight": 23.05,
+    "cropMethod": "stipple"
+  },
+  "homekoncept-140-plot.jpg": {
+    "pageUrl": "https://www.extradom.pl/projekt-domu-homekoncept-140-KRX1308",
+    "sourceUrl": "https://wpcdn.pl/extradom/designs/80073/683450/e047c4281ad16bbb8f397496e9ae5e3838518f012d9f73db8f4acba073e1ca52.jpg",
+    "locationImageSelector": ".location__image img[data-name=\"dzialka\"], .location__image img",
+    "meterWidth": 20.8,
+    "meterHeight": 27.3,
+    "cropMethod": "greenFrame"
+  }
+}

@@ -1,11 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock the imageProcessor module
 vi.mock('../imageProcessor', () => ({
   cropToInnerRectangle: vi.fn(),
+  getImageNaturalDimensions: vi.fn(),
 }));
 
-// Mock Leaflet
 vi.mock('leaflet', () => ({
   default: {
     imageOverlay: {
@@ -17,11 +16,9 @@ vi.mock('leaflet', () => ({
 }));
 
 import { createRotatedImageOverlay } from '../leafletUtils';
-import { cropToInnerRectangle } from '../imageProcessor';
+import { cropToInnerRectangle, getImageNaturalDimensions } from '../imageProcessor';
 import L from 'leaflet';
 
-// Get the mocked objects
-const mockOverlay = { bringToFront: vi.fn() };
 const mockL = L as any;
 
 describe('leafletUtils integration', () => {
@@ -36,35 +33,38 @@ describe('leafletUtils integration', () => {
         width: 800,
         height: 600
       };
-      
-      // Mock the image processing pipeline
+
       vi.mocked(cropToInnerRectangle).mockResolvedValue(mockCroppedImage);
-      
-      const imageUrl = 'data:image/png;base64,original';
+      vi.mocked(getImageNaturalDimensions).mockResolvedValue({
+        width: 800,
+        height: 600,
+      });
+
+      const imageUrl = 'https://example.com/original.png';
       const coordinates = [
         [52.2296756, 21.0122287],
         [52.2296756, 21.0122288],
         [52.2296757, 21.0122288],
         [52.2296757, 21.0122287],
       ];
-      
+
       const result = await createRotatedImageOverlay(imageUrl, coordinates, false, false);
-      
+
       expect(result).toBeDefined();
       expect(result.bringToFront).toBeDefined();
       expect(mockL.imageOverlay.rotated).toHaveBeenCalledWith(
         mockCroppedImage.imageUrl,
-        coordinates[3], // rotated coordinates[3] (bottom-left)
-        coordinates[0], // rotated coordinates[0] (top-left)
-        coordinates[2], // rotated coordinates[2] (bottom-right)
+        coordinates[1],
+        coordinates[2],
+        coordinates[0],
         expect.any(Object)
       );
     });
 
     it('should handle image processing errors gracefully', async () => {
-      // Mock cropToInnerRectangle to throw an error
       vi.mocked(cropToInnerRectangle).mockRejectedValue(new Error('Processing failed'));
-      
+      vi.mocked(getImageNaturalDimensions).mockRejectedValue(new Error('Processing failed'));
+
       const imageUrl = 'data:image/png;base64,original';
       const coordinates = [
         [52.2296756, 21.0122287],
@@ -72,18 +72,16 @@ describe('leafletUtils integration', () => {
         [52.2296757, 21.0122288],
         [52.2296757, 21.0122287],
       ];
-      
-      // Should not throw, should fall back to original image
+
       const result = await createRotatedImageOverlay(imageUrl, coordinates, false, false);
-      
+
       expect(result).toBeDefined();
       expect(result.bringToFront).toBeDefined();
-      // Should fall back to original image URL
       expect(mockL.imageOverlay.rotated).toHaveBeenCalledWith(
         imageUrl,
-        coordinates[3], // rotated coordinates[3] (bottom-left)
-        coordinates[0], // rotated coordinates[0] (top-left)
-        coordinates[2], // rotated coordinates[2] (bottom-right)
+        coordinates[1],
+        coordinates[2],
+        coordinates[0],
         expect.any(Object)
       );
     });

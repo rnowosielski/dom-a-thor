@@ -9,7 +9,8 @@ export const DynamicCenter: React.FC<DynamicCenterProps> = ({center}) => {
     const map = useMap();
 
     useEffect(() => {
-        map.setView(center); // Update the map's center
+        const zoom = typeof map.getZoom === "function" ? map.getZoom() : undefined;
+        map.setView(center, zoom, { animate: false });
     }, [center, map]);
 
     return null;

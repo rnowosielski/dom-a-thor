@@ -33,6 +33,7 @@ vi.mock('react-leaflet', () => ({
     addLayer: vi.fn(),
     removeLayer: vi.fn(),
     setView: vi.fn(),
+    getZoom: vi.fn(() => 20),
   })),
 }));
 
@@ -136,6 +137,18 @@ describe('DomAThor', () => {
     expect(style).toEqual({
       width: '80vh',
       height: '80vh',
+    });
+  });
+
+  it('should use compact map size when compact prop is true', () => {
+    render(<DomAThor {...defaultProps} compact={true} />);
+
+    const mapContainer = screen.getByTestId('map-container');
+    const style = JSON.parse(mapContainer.getAttribute('data-style') || '{}');
+
+    expect(style).toEqual({
+      width: '560px',
+      height: '480px',
     });
   });
 

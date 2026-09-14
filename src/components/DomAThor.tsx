@@ -15,7 +15,13 @@ import {
 import "leaflet-loading/src/Control.Loading.css"
 
 const mapContainerStyle = {
-    width: "80vh", height: "80vh",
+    width: "80vh",
+    height: "80vh",
+};
+
+const compactMapContainerStyle = {
+    width: "560px",
+    height: "480px",
 };
 
 interface Props {
@@ -25,9 +31,10 @@ interface Props {
     width: number;
     mirrorX: boolean;
     mirrorY: boolean;
+    compact?: boolean;
 }
 
-const DomAThor: React.FC<Props> = ({landIdentifier, houseDataUrl, height, width, mirrorX, mirrorY}) => {
+const DomAThor: React.FC<Props> = ({landIdentifier, houseDataUrl, height, width, mirrorX, mirrorY, compact = false}) => {
     const [landCoordinates, setLandCoordinates] = useState<CoordinateArray>([]);
     const [center, setCenter] = useState<Coordinate>([52.2296756, 21.0122287]);
     const [houseCoordinates, setHouseCoordinates] = useState<CoordinateArray>([]);
@@ -67,7 +74,7 @@ const DomAThor: React.FC<Props> = ({landIdentifier, houseDataUrl, height, width,
                 center={center}
                 maxZoom={30}
                 zoom={20}
-                style={mapContainerStyle}
+                style={compact ? compactMapContainerStyle : mapContainerStyle}
                 dragging={true}
                 zoomControl={true}
                 scrollWheelZoom={true}
