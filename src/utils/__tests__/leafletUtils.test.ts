@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import * as L from 'leaflet'
-import { createDraggablePolygon, createRotatedImageOverlay, getPolygonCoordinates } from '../leafletUtils'
+import { createDraggablePolygon, createRotatedImageOverlay, getPolygonCoordinates, mapImageOverlayCorners } from '../leafletUtils'
 import type { CoordinateArray } from '../../types/leaflet'
 
 // Mock the imageProcessor module
@@ -9,6 +9,10 @@ vi.mock('../imageProcessor', () => ({
     imageUrl: 'data:image/png;base64,processed',
     width: 800,
     height: 600
+  }),
+  getImageNaturalDimensions: vi.fn().mockResolvedValue({
+    width: 800,
+    height: 600,
   }),
 }))
 
@@ -70,6 +74,8 @@ const mockCanvas = {
 const mockImage = {
   width: 100,
   height: 100,
+  naturalWidth: 100,
+  naturalHeight: 100,
   onload: null,
   onerror: null,
   crossOrigin: '',
@@ -164,10 +170,10 @@ describe('leafletUtils', () => {
       const result = await createRotatedImageOverlay(imageUrl, coordinates)
       
       expect(L.imageOverlay.rotated).toHaveBeenCalledWith(
-        'data:image/png;base64,processed', // Should use processed image URL
-        coordinates[3], // rotated coordinates[3] (bottom-left)
-        coordinates[0], // rotated coordinates[0] (top-left)
-        coordinates[2], // rotated coordinates[2] (bottom-right)
+        'data:image/png;base64,processed',
+        coordinates[1],
+        coordinates[2],
+        coordinates[0],
         {
           opacity: 1,
           interactive: true,
@@ -186,9 +192,9 @@ describe('leafletUtils', () => {
 
       expect(L.imageOverlay.rotated).toHaveBeenCalledWith(
         'data:image/png;base64,processed',
-        coordinates[3], // rotated coordinates[3] (bottom-left)
-        coordinates[0], // rotated coordinates[0] (top-left)
-        coordinates[2], // rotated coordinates[2] (bottom-right)
+        coordinates[1],
+        coordinates[2],
+        coordinates[0],
         {
           opacity: 1,
           interactive: true,
@@ -204,10 +210,10 @@ describe('leafletUtils', () => {
       const result = await createRotatedImageOverlay(imageUrl, coordinates)
 
       expect(L.imageOverlay.rotated).toHaveBeenCalledWith(
-        'data:image/png;base64,processed',
-        coordinates[3], // rotated coordinates[3] (bottom-left)
-        coordinates[0], // rotated coordinates[0] (top-left)
-        coordinates[2], // rotated coordinates[2] (bottom-right)
+        imageUrl,
+        coordinates[1],
+        coordinates[2],
+        coordinates[0],
         {
           opacity: 1,
           interactive: true,
@@ -217,6 +223,23 @@ describe('leafletUtils', () => {
     })
 
   })
+
+  describe('mapImageOverlayCorners', () => {
+    it('should map image width to the east-west edge and height to the north-south edge', () => {
+      const coordinates: CoordinateArray = [
+        [0, 0],
+        [2, 0],
+        [2, 3],
+        [0, 3],
+      ];
+
+      expect(mapImageOverlayCorners(coordinates)).toEqual([
+        [2, 0],
+        [2, 3],
+        [0, 0],
+      ]);
+    });
+  });
 
   describe('getPolygonCoordinates', () => {
     it('should extract coordinates from polygon as array of [lat, lng] pairs', () => {

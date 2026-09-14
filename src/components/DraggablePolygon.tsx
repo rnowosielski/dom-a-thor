@@ -40,40 +40,53 @@ export const DraggablePolygon: React.FC<DraggablePolygonProps> = ({
     };
 
     useEffect(() => {
+        let cancelled = false;
+
         cleanupImageOverlay();
         if (coordinates.length < 3) return;
+
         const polygon: ExtendedPolygon = createDraggablePolygon(coordinates);
         polygonRef.current = polygon;
         polygon.addTo(map);
-        polygon.transform.enable({rotation: true, scaling: false})
+        polygon.transform.enable({rotation: true, scaling: false});
 
         polygon.on("rotatestart", handleStart);
         polygon.on("dragstart", handleStart);
         polygon.on("rotateend", handleEnd);
         polygon.on("dragend", handleEnd);
 
-        // Cleanup function
+        const loadOverlay = async () => {
+            if (!houseDataUrl || cancelled) return;
+            try {
+                const overlay = await createRotatedImageOverlay(
+                    houseDataUrl,
+                    getPolygonCoordinates(polygon),
+                    mirrorX,
+                    mirrorY
+                );
+                if (cancelled) return;
+                overlay.addTo(map);
+                polygon.bringToFront();
+                imageOverlayRef.current = overlay;
+            } catch (error) {
+                console.error('Failed to create image overlay:', error);
+            }
+        };
+
+        void loadOverlay();
+
         return () => {
+            cancelled = true;
             cleanupImageOverlay();
+            polygon.off?.("rotatestart", handleStart);
+            polygon.off?.("dragstart", handleStart);
+            polygon.off?.("rotateend", handleEnd);
+            polygon.off?.("dragend", handleEnd);
             polygon.dragging?.disable();
             polygon.transform?.disable();
             map.removeLayer(polygon);
+            polygonRef.current = null;
         };
-    }, [coordinates, houseDataUrl, map]);
-
-    useEffect(() => {
-        if (houseDataUrl && polygonRef.current) {
-            cleanupImageOverlay();
-            createRotatedImageOverlay(houseDataUrl, getPolygonCoordinates(polygonRef.current), mirrorX, mirrorY)
-                .then(overlay => {
-                    overlay.addTo(map);
-                    polygonRef.current?.bringToFront();
-                    imageOverlayRef.current = overlay;
-                })
-                .catch(error => {
-                    console.error('Failed to create image overlay:', error);
-                });
-        }
     }, [coordinates, houseDataUrl, map, mirrorX, mirrorY]);
 
     const cleanupImageOverlay = () => {

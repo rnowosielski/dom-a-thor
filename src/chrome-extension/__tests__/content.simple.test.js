@@ -1,8 +1,88 @@
-import { describe, it, expect } from 'vitest';
+/**
+ * @vitest-environment jsdom
+ */
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+    getPlotImageTargetSrc,
+    loadPlotImageElement,
+    MIN_PLOT_IMAGE_SIDE,
+    normalizeExtradomImageUrl,
+} from '../plotImageCapture.js';
 
 describe('chrome-extension/content.js', () => {
-  it('should be importable', async () => {
-    // Just test that the module can be imported without errors
-    await expect(import('../content.js')).resolves.toBeDefined();
-  });
+    beforeEach(() => {
+        document.body.innerHTML = '';
+    });
+
+    it('normalizes wpcdn urls', () => {
+        expect(normalizeExtradomImageUrl('https://example.com/x?file=wpcdn.pl/extradom/plot.jpg')).toBe(
+            'https://wpcdn.pl/extradom/plot.jpg'
+        );
+    });
+
+    it('waits for the full plot image after replacing a lazy-loaded thumbnail', async () => {
+        document.body.innerHTML = `
+            <div class="location__image">
+                <img
+                    data-name="dzialka"
+                    data-src="https://wpcdn.pl/extradom/designs/full-plot.jpg"
+                    src="https://wpcdn.pl/extradom/designs/thumbnail.jpg"
+                    width="217"
+                    height="281"
+                />
+            </div>
+        `;
+
+        const imageEl = document.querySelector('img');
+        Object.defineProperty(imageEl, 'complete', {
+            configurable: true,
+            get() {
+                return this.src.includes('full-plot') || this.src.includes('thumbnail');
+            },
+        });
+        Object.defineProperty(imageEl, 'naturalWidth', {
+            configurable: true,
+            get() {
+                return this.src.includes('full-plot') ? 915 : 217;
+            },
+        });
+        Object.defineProperty(imageEl, 'naturalHeight', {
+            configurable: true,
+            get() {
+                return this.src.includes('full-plot') ? 1028 : 281;
+            },
+        });
+
+        const loadPromise = loadPlotImageElement(imageEl);
+        imageEl.src = 'https://wpcdn.pl/extradom/designs/full-plot.jpg';
+        imageEl.dispatchEvent(new Event('load'));
+
+        const loaded = await loadPromise;
+
+        expect(loaded).toBe(imageEl);
+        expect(loaded.naturalWidth).toBe(915);
+        expect(loaded.naturalHeight).toBe(1028);
+        expect(getPlotImageTargetSrc(loaded)).toBe('https://wpcdn.pl/extradom/designs/full-plot.jpg');
+    });
+
+    it('rejects plot images below the minimum capture size', async () => {
+        document.body.innerHTML = `
+            <div class="location__image">
+                <img
+                    data-name="dzialka"
+                    src="https://wpcdn.pl/extradom/designs/thumbnail.jpg"
+                />
+            </div>
+        `;
+
+        const imageEl = document.querySelector('img');
+        Object.defineProperty(imageEl, 'naturalWidth', { configurable: true, value: 217 });
+        Object.defineProperty(imageEl, 'naturalHeight', { configurable: true, value: 281 });
+
+        const loadPromise = loadPlotImageElement(imageEl);
+        imageEl.dispatchEvent(new Event('load'));
+
+        await expect(loadPromise).resolves.toBeNull();
+        expect(MIN_PLOT_IMAGE_SIDE).toBeGreaterThan(217);
+    });
 });

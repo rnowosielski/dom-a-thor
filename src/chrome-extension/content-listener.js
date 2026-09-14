@@ -1,4 +1,4 @@
-function fetchLandDetailsFromExtraDom() {
+async function fetchLandDetailsFromExtraDom() {
     const items = document.querySelectorAll('.parameters__item');
     let value = null;
     items.forEach(item => {
@@ -10,21 +10,39 @@ function fetchLandDetailsFromExtraDom() {
 
     const re = /(?<width>\d{1,3}(?:[.,]\d+)?)[\s]*[x×][\s]*(?<height>\d{1,3}(?:[.,]\d+)?)[\s]*m\b/i;
 
-    const imageEl = document.querySelector('.location__image img');
-    const imgUrl = imageEl?.getAttribute('data-src') || imageEl?.src;
+    const imageEl = await resolvePlotImageElement();
+    const fallbackEl = getPlotImageCandidates()[0] ?? null;
+    const imgUrl =
+        (imageEl && getPlotImageTargetSrc(imageEl)) ||
+        (fallbackEl && getPlotImageTargetSrc(fallbackEl)) ||
+        null;
+
+    if (!value || !imgUrl) {
+        return null;
+    }
 
     const match = value.match(re);
-    if (match) {
-        const widthStr  = match.groups.width;
-        const heightStr = match.groups.height;
-        const widthM  = parseFloat(widthStr.replace(',', '.'));   // 21.7
-        const heightM = parseFloat(heightStr.replace(',', '.'));  // 23.40
-        return JSON.stringify({ width: widthM, height: heightM, imageUrl: imgUrl });
+    if (!match) {
+        return null;
     }
-    return null;
+
+    const widthStr = match.groups.width;
+    const heightStr = match.groups.height;
+    const widthM = parseFloat(widthStr.replace(',', '.'));
+    const heightM = parseFloat(heightStr.replace(',', '.'));
+    const imageDataUrl = imageEl ? await getPlotImageDataUrl(imageEl) : null;
+
+    return JSON.stringify({
+        width: widthM,
+        height: heightM,
+        imageUrl: imgUrl,
+        imageDataUrl,
+        sourceWidth: imageEl?.naturalWidth ?? 0,
+        sourceHeight: imageEl?.naturalHeight ?? 0,
+    });
 }
 
-function fetchLandDetailsFromArchon() {
+async function fetchLandDetailsFromArchon() {
     const item = [...document.querySelectorAll('.product-data__item')].find(el =>
         el.querySelector('.product-data__title')?.textContent.includes('Minimalne wymiary działki')
     );
@@ -39,19 +57,23 @@ function fetchLandDetailsFromArchon() {
     if (match) {
         const width = parseFloat(match.groups.width.replace(',', '.'));
         const height = parseFloat(match.groups.height.replace(',', '.'));
-        return JSON.stringify({ width: width, height: height, imageUrl: absoluteUrl });
+        return JSON.stringify({ width: width, height: height, imageUrl: absoluteUrl, imageDataUrl: null });
     }
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "getLandDetails") {
         if (window.location.hostname.includes('extradom.pl')) {
-            const data = fetchLandDetailsFromExtraDom();
-            sendResponse({ data });
+            fetchLandDetailsFromExtraDom()
+                .then((data) => sendResponse({ data }))
+                .catch(() => sendResponse({ data: null }));
+            return true;
         }
         if (window.location.hostname.includes('archon.pl')) {
-            const data = fetchLandDetailsFromArchon();
-            sendResponse({ data });
+            fetchLandDetailsFromArchon()
+                .then((data) => sendResponse({ data }))
+                .catch(() => sendResponse({ data: null }));
+            return true;
         }
     }
 });

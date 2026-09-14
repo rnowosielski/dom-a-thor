@@ -56,16 +56,21 @@ describe('App - Simple Tests', () => {
     expect(screen.getByTestId('debug-controls')).toBeInTheDocument()
   })
 
-  it('should hide debug controls when in Chrome extension', () => {
-    // Mock window.chrome as available
-    Object.defineProperty(window, 'chrome', {
-      value: { tabs: {} },
-      writable: true,
-    })
-    
-    render(<App />)
-    
-    expect(screen.queryByTestId('debug-controls')).not.toBeInTheDocument()
+  it('should hide debug controls when in Chrome extension popup', () => {
+    const originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...originalLocation, protocol: 'chrome-extension:' },
+    });
+
+    render(<App />);
+
+    expect(screen.queryByTestId('debug-controls')).not.toBeInTheDocument();
+
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: originalLocation,
+    });
   })
 
   it('should display land ID input', () => {
@@ -96,12 +101,7 @@ describe('App - Simple Tests', () => {
     const { container } = render(<App />)
     
     const mainDiv = container.firstChild as HTMLElement
-    expect(mainDiv).toHaveStyle({
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '10px'
-    })
+    expect(mainDiv.querySelector('.app-controls')).toBeInTheDocument()
   })
 
   it('should handle window being undefined (SSR)', () => {

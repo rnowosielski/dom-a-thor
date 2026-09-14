@@ -6,3 +6,46 @@
   padding: 2rem;
   text-align: center;
 }
+
+.app-shell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.extension-popup {
+  width: 580px;
+}
+
+.extension-version {
+  font-size: 11px;
+  color: #666;
+  text-align: right;
+  margin-top: 4px;
+}
+
+.app-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+html.extension-popup-root,
+html.extension-popup-root body {
+  width: 580px;
+  min-width: 580px;
+  max-width: 580px;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+html.extension-popup-root #root {
+  max-width: none;
+  width: 580px;
+  padding: 0.5rem;
+  margin: 0;
+}

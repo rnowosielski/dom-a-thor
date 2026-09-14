@@ -2,11 +2,13 @@
   "manifest_version": 3,
   "name": "Dom-A-Thor",
   "description": "This extension triggers on specific websites like extradom.pl and archon.pl.",
-  "version": "1.0",
+  "version": "1.0.1",
   "permissions": ["storage", "scripting", "tabs"],
   "host_permissions": [
     "https://www.extradom.pl/*",
-    "https://www.archon.pl/*"
+    "https://www.archon.pl/*",
+    "https://wpcdn.pl/*",
+    "https://i.wpimg.pl/*"
   ],
   "content_scripts": [
     {

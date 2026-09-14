@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crop verification</title>
+  <style>
+    body { font-family: sans-serif; padding: 16px; }
+    .row { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+    img, canvas { border: 1px solid #999; max-width: 420px; }
+    pre { background: #f4f4f4; padding: 12px; }
+    .fail { color: #b00020; font-weight: bold; }
+    .pass { color: #006400; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Crop verification</h1>
+  <pre id="log">Running…</pre>
+  <div class="row">
+    <div>
+      <h2>Original</h2>
+      <img id="original" src="/test-fixtures/willa-optima-plot.png" alt="original" />
+    </div>
+    <div>
+      <h2>Cropped</h2>
+      <img id="cropped" alt="cropped" />
+    </div>
+  </div>
+  <script type="module">
+    import { processPlotImageForOverlay } from '/src/utils/imageProcessor.ts';
+
+    const params = new URLSearchParams(window.location.search);
+    const imagePath = params.get('image') ?? '/test-fixtures/willa-optima-plot.png';
+    const meterWidth = Number(params.get('width') ?? '19.77');
+    const meterHeight = Number(params.get('height') ?? '23.05');
+
+    const logEl = document.getElementById('log');
+    const croppedEl = document.getElementById('cropped');
+    const originalEl = document.getElementById('original');
+
+    const lines = [];
+
+    function log(line) {
+      lines.push(line);
+      logEl.textContent = lines.join('\n');
+    }
+
+    async function analyzeBluePixels(dataUrl) {
+      const img = new Image();
+      img.src = dataUrl;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const band = Math.max(2, Math.round(Math.min(width, height) * 0.03));
+      let blueEdge = 0;
+      let totalEdge = 0;
+      let blueTotal = 0;
+
+      const isBlue = (i) => {
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        return b > 120 && b > r + 40 && b > g + 15;
+      };
+
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          if (isBlue(i)) blueTotal++;
+          const onEdge = x < band || y < band || x >= width - band || y >= height - band;
+          if (!onEdge) continue;
+          totalEdge++;
+          if (isBlue(i)) blueEdge++;
+        }
+      }
+
+      return {
+        blueEdge,
+        totalEdge,
+        blueRatio: totalEdge ? blueEdge / totalEdge : 0,
+        blueTotalRatio: blueTotal / (width * height),
+      };
+    }
+
+    try {
+      const sourceUrl = imagePath;
+      originalEl.src = sourceUrl;
+      await originalEl.decode();
+      const originalArea = originalEl.naturalWidth * originalEl.naturalHeight;
+      log(`Original: ${originalEl.naturalWidth}x${originalEl.naturalHeight} (${originalArea}px²)`);
+      log(`Target meters: ${meterWidth} x ${meterHeight}`);
+
+      const finalCrop = await processPlotImageForOverlay(sourceUrl, meterWidth, meterHeight);
+      croppedEl.src = finalCrop.imageUrl;
+
+      const croppedArea = finalCrop.width * finalCrop.height;
+      const areaRatio = croppedArea / originalArea;
+      const aspect = finalCrop.width / finalCrop.height;
+      const meterAspect = meterWidth / meterHeight;
+      const edgeStats = await analyzeBluePixels(finalCrop.imageUrl);
+
+      log(`Cropped: ${finalCrop.width}x${finalCrop.height} (${croppedArea}px²)`);
+      log(`Area ratio: ${(areaRatio * 100).toFixed(1)}% of original`);
+      log(`Aspect ratio: ${aspect.toFixed(3)} (meters: ${meterAspect.toFixed(3)})`);
+      log(`Blue edge ratio: ${(edgeStats.blueRatio * 100).toFixed(1)}%`);
+      log(`Blue pixels in crop: ${(edgeStats.blueTotalRatio * 100).toFixed(2)}%`);
+
+      const checks = [
+        ['Crop smaller than original', areaRatio < 0.75],
+        ['Crop not tiny', areaRatio > 0.12],
+        ['Aspect matches meter dimensions', Math.abs(aspect - meterAspect) < 0.03],
+        ['Blue dimension labels removed from edges', edgeStats.blueRatio < 0.05],
+        ['Blue labels not dominating crop', edgeStats.blueTotalRatio < 0.01],
+      ];
+
+      log('');
+      let allPass = true;
+      for (const [name, ok] of checks) {
+        log(`${ok ? 'PASS' : 'FAIL'}: ${name}`);
+        if (!ok) allPass = false;
+      }
+
+      log('');
+      log(allPass ? 'OVERALL: PASS' : 'OVERALL: FAIL');
+      logEl.className = allPass ? 'pass' : 'fail';
+      document.title = `${allPass ? 'PASS' : 'FAIL'} ${finalCrop.width}x${finalCrop.height}`;
+      window.__cropVerifyResult = { allPass, areaRatio, aspect, meterAspect, edgeStats, result: finalCrop, log: lines.join('\n') };
+      await fetch('/__crop_verify_result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(window.__cropVerifyResult),
+      }).catch(() => {});
+    } catch (error) {
+      log(`ERROR: ${error?.message || error}`);
+      logEl.className = 'fail';
+      window.__cropVerifyResult = { allPass: false, error: String(error) };
+    }
+  </script>
+</body>
+</html>

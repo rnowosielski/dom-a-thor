@@ -30,7 +30,8 @@ export function calculatePolygonCenter(coordinates: CoordinateArray): Coordinate
 }
 
 /**
- * Calculate house coordinates based on dimensions and center point
+ * Calculate house footprint corners from meter dimensions and a map center.
+ * Corner order: SW, NW, NE, SE. Width spans longitude, height spans latitude.
  */
 export function calculateHouseCoordinates(
   center: Coordinate,
