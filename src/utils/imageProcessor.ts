@@ -507,8 +507,14 @@ const applyPlainPlotTrimPipeline = async (
   meterHeight: number
 ): Promise<{ imageUrl: string; width: number; height: number }> => {
   const targetAspect = meterWidth / meterHeight;
-  let current = await enforceMeterAspect(cropped, meterWidth, meterHeight);
+  const aspectClose = Math.abs(cropped.width / cropped.height - targetAspect) <= 0.015;
+  let current = cropped;
 
+  if (aspectClose) {
+    return cropped;
+  }
+
+  current = await enforceMeterAspect(current, meterWidth, meterHeight);
   current = await trimAnnotationMarginsFromCrop(current);
 
   if (Math.abs(current.width / current.height - targetAspect) > 0.01) {

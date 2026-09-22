@@ -28,7 +28,7 @@ scripts/
 |---------|------------|--------|--------------------|----------------------|
 | Willa Optima 1 | stipple | 19.77 × 23.05 | 341 × 397 | 438 × 442 PNG |
 | HomeKoncept 140 | greenFrame | 20.8 × 27.3 | 606 × 796 | 915 × 1028 JPG |
-| Kubiczny D30 | plainPlot | 20.65 × 26.24 | 598 × 760 | 1559 × 2155 JPG |
+| Kubiczny D30 | plainPlot | 20.65 × 26.24 | 822 × 1045 | 1559 × 2155 JPG |
 
 ## Known wrong source URLs
 
@@ -70,7 +70,7 @@ processPlotImageForOverlay
   → getChosenCropMethodName / cropToInnerRectangle
   → detect green lawn side columns on inner crop
   → if stipple && !greenFrame && width ≤ 680: enforceMeterAspect → return
-  → if !greenFrame: applyPlainPlotTrimPipeline (aspect → trim → optional aspect)
+  → if !greenFrame: applyPlainPlotTrimPipeline (keep when aspect matches, else aspect → trim)
   → else: applyGreenFrameTrimPipeline (trim → aspect → trim loops)
 ```
 

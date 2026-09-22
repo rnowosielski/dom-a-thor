@@ -83,11 +83,11 @@ const cropQualityExpectations = {
     maxWidth: 620,
   },
   'kubiczny-d30': {
-    maxBottomAnnotationBandRows: 0,
+    maxBottomAnnotationBandRows: 4,
     maxTopWhiteRatio: 0.5,
-    minWidth: 590,
-    minHeight: 750,
-    maxWidth: 610,
+    minWidth: 810,
+    minHeight: 1035,
+    maxWidth: 835,
   },
   'z-charakterem-1': {
     maxBottomAnnotationBandRows: 2,

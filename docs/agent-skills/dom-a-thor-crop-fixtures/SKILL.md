@@ -15,7 +15,7 @@ Keep plot overlay crops correct for extradom project pages. Every new odd projec
 |------|--------|-------------|----------|---------|
 | Stipple plot | Dotted hatch border, blue dimension text | `stipple` | `enforceMeterAspect` only; skip green-frame trim if width ≤ 680 | Willa Optima (~341×397) |
 | Green frame | Green lawn sides, bottom/top labels | `greenFrame` | Full trim pipeline; reject top white + bottom labels | HomeKoncept 140 (~606×796) |
-| Plain plot | Gray plot fill, blue dimension text, no green lawn columns | `plainPlot` | Aspect first, then label trim; skip green-frame trim | Kubiczny D30 (~598×760) |
+| Plain plot | Gray plot fill, blue dimension text, no green lawn columns | `plainPlot` | Keep inner crop when aspect matches meters; otherwise aspect trim + label trim | Kubiczny D30 (~822×1045) |
 
 Fixing one type often breaks the other. After any crop change, run the **full** suite, not a single fixture.
 
