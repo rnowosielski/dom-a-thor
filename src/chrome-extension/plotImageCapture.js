@@ -1,4 +1,9 @@
-const MIN_PLOT_IMAGE_SIDE = 400;
+const MIN_PLOT_IMAGE_MIN_SIDE = 320;
+const MIN_PLOT_IMAGE_MAX_SIDE = 360;
+
+const isAcceptablePlotImageSize = (width, height) =>
+    Math.min(width, height) >= MIN_PLOT_IMAGE_MIN_SIDE &&
+    Math.max(width, height) >= MIN_PLOT_IMAGE_MAX_SIDE;
 
 export async function waitForImageLoad(imageEl) {
     if (imageEl.complete && imageEl.naturalWidth > 0 && imageEl.naturalHeight > 0) {
@@ -72,9 +77,7 @@ export async function loadPlotImageElement(imageEl) {
 
     imageEl.crossOrigin = 'anonymous';
 
-    const isUsableSize =
-        imageEl.naturalWidth >= MIN_PLOT_IMAGE_SIDE &&
-        imageEl.naturalHeight >= MIN_PLOT_IMAGE_SIDE;
+    const isUsableSize = isAcceptablePlotImageSize(imageEl.naturalWidth, imageEl.naturalHeight);
     const isTargetLoaded =
         imageEl.complete &&
         isUsableSize &&
@@ -88,7 +91,7 @@ export async function loadPlotImageElement(imageEl) {
         await waitForImageLoad(imageEl);
     }
 
-    if (imageEl.naturalWidth < MIN_PLOT_IMAGE_SIDE || imageEl.naturalHeight < MIN_PLOT_IMAGE_SIDE) {
+    if (!isAcceptablePlotImageSize(imageEl.naturalWidth, imageEl.naturalHeight)) {
         return null;
     }
 
@@ -132,4 +135,4 @@ export async function getPlotImageDataUrl(imageEl) {
     }
 }
 
-export { MIN_PLOT_IMAGE_SIDE };
+export { MIN_PLOT_IMAGE_MIN_SIDE, MIN_PLOT_IMAGE_MAX_SIDE, isAcceptablePlotImageSize };

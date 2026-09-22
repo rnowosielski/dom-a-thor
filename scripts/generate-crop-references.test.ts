@@ -20,6 +20,18 @@ const fixtures = [
     meterWidth: 20.8,
     meterHeight: 27.3,
   },
+  {
+    name: 'kubiczny-d30',
+    sourceFile: 'kubiczny-d30-plot.jpg',
+    meterWidth: 20.65,
+    meterHeight: 26.24,
+  },
+  {
+    name: 'z-charakterem-1',
+    sourceFile: 'z-charakterem-1-plot.png',
+    meterWidth: 18.25,
+    meterHeight: 27.35,
+  },
 ] as const;
 
 beforeAll(async () => {

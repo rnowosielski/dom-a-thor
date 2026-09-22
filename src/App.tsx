@@ -9,9 +9,14 @@ import {useEffect, useState} from "react";
 const getIsExtensionPopup = () =>
     typeof window !== 'undefined' && window.location.protocol === 'chrome-extension:';
 
-const MIN_PLOT_SOURCE_SIDE = 400;
-const MIN_PLOT_CROP_WIDTH = 320;
+const MIN_PLOT_SOURCE_MIN_SIDE = 320;
+const MIN_PLOT_SOURCE_MAX_SIDE = 360;
+const MIN_PLOT_CROP_WIDTH = 240;
 const MIN_PLOT_CROP_HEIGHT = 360;
+
+const isAcceptablePlotSource = (sourceWidth: number, sourceHeight: number) =>
+    Math.min(sourceWidth, sourceHeight) >= MIN_PLOT_SOURCE_MIN_SIDE &&
+    Math.max(sourceWidth, sourceHeight) >= MIN_PLOT_SOURCE_MAX_SIDE;
 
 const isAcceptablePlotCrop = (cropWidth: number, cropHeight: number) =>
     cropWidth >= MIN_PLOT_CROP_WIDTH && cropHeight >= MIN_PLOT_CROP_HEIGHT;
@@ -22,8 +27,7 @@ const hasUsableCapturedPlot = (landDetails: {
     sourceHeight?: number;
 }) =>
     Boolean(landDetails.imageDataUrl) &&
-    (landDetails.sourceWidth ?? 0) >= MIN_PLOT_SOURCE_SIDE &&
-    (landDetails.sourceHeight ?? 0) >= MIN_PLOT_SOURCE_SIDE;
+    isAcceptablePlotSource(landDetails.sourceWidth ?? 0, landDetails.sourceHeight ?? 0);
 
 function App() {
     const isExtensionPopup = getIsExtensionPopup();

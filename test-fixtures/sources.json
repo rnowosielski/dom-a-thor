@@ -14,5 +14,21 @@
     "meterWidth": 20.8,
     "meterHeight": 27.3,
     "cropMethod": "greenFrame"
+  },
+  "kubiczny-d30-plot.jpg": {
+    "pageUrl": "https://www.extradom.pl/projekt-domu-kubiczny-d30-wariant-i-WWC1010",
+    "sourceUrl": "https://wpcdn.pl/extradom/designs/73069/603940/bec3e9d541b14ceaf107635dd05ede93ab1faec56819b9d6b35fb79c1c408b2f.jpg",
+    "locationImageSelector": ".location__image img[data-name=\"dzialka\"], .location__image img",
+    "meterWidth": 20.65,
+    "meterHeight": 26.24,
+    "cropMethod": "plainPlot"
+  },
+  "z-charakterem-1-plot.png": {
+    "pageUrl": "https://www.extradom.pl/projekt-domu-z-charakterem-1-WAW1018",
+    "sourceUrl": "https://wpcdn.pl/extradom/media/340891/source",
+    "locationImageSelector": ".location__image img[data-name=\"dzialka\"], .location__image img",
+    "meterWidth": 18.25,
+    "meterHeight": 27.35,
+    "cropMethod": "stipple"
   }
 }

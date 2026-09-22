@@ -377,6 +377,41 @@ export const trimAnnotationMarginsFromCrop = async (
 
 const untrimmedGreenFrameMinWidth = 680;
 
+const cropHasGreenFrameSideColumns = async (
+  cropped: { imageUrl: string; width: number; height: number }
+): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) {
+        resolve(false);
+        return;
+      }
+
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      resolve(
+        hasGreenFrameSideColumns(
+          imageData.data,
+          canvas.width,
+          canvas.height,
+          { x: 0, y: 0, width: canvas.width, height: canvas.height }
+        )
+      );
+    };
+
+    img.onerror = () => reject(new Error('Failed to load cropped image'));
+    img.src = cropped.imageUrl;
+  });
+};
+
 const getChosenCropMethodName = async (
   imageUrl: string,
   meterWidth: number,
@@ -466,6 +501,23 @@ const applyGreenFrameTrimPipeline = async (
   return current;
 };
 
+const applyPlainPlotTrimPipeline = async (
+  cropped: { imageUrl: string; width: number; height: number },
+  meterWidth: number,
+  meterHeight: number
+): Promise<{ imageUrl: string; width: number; height: number }> => {
+  const targetAspect = meterWidth / meterHeight;
+  let current = await enforceMeterAspect(cropped, meterWidth, meterHeight);
+
+  current = await trimAnnotationMarginsFromCrop(current);
+
+  if (Math.abs(current.width / current.height - targetAspect) > 0.01) {
+    current = await enforceMeterAspect(current, meterWidth, meterHeight);
+  }
+
+  return current;
+};
+
 export const processPlotImageForOverlay = async (
   imageUrl: string,
   meterWidth: number,
@@ -474,16 +526,24 @@ export const processPlotImageForOverlay = async (
 ): Promise<{ imageUrl: string; width: number; height: number }> => {
   const method = await getChosenCropMethodName(imageUrl, meterWidth, meterHeight, config);
   let current = await cropToInnerRectangle(imageUrl, config, meterWidth, meterHeight);
+  const hasGreenFrame = await cropHasGreenFrameSideColumns(current);
 
   if (method === 'stipple') {
-    current = await enforceMeterAspect(current, meterWidth, meterHeight);
+    const targetAspect = meterWidth / meterHeight;
+    if (Math.abs(current.width / current.height - targetAspect) > 0.015) {
+      current = await enforceMeterAspect(current, meterWidth, meterHeight);
+    }
 
-    if (current.width <= untrimmedGreenFrameMinWidth) {
+    if (!hasGreenFrame && current.width <= untrimmedGreenFrameMinWidth) {
       return current;
     }
   }
 
-  return applyGreenFrameTrimPipeline(current, meterWidth, meterHeight);
+  if (method === 'greenFrame' || hasGreenFrame) {
+    return applyGreenFrameTrimPipeline(current, meterWidth, meterHeight);
+  }
+
+  return applyPlainPlotTrimPipeline(current, meterWidth, meterHeight);
 };
 
 /**
@@ -656,7 +716,8 @@ const processImageWithJavaScript = (
       canvas.width,
       canvas.height
     );
-    return cropToRect(canvas, trimmedRect, insetMargin);
+    const cropInset = chosen.methodName === 'stipple' ? 0 : insetMargin;
+    return cropToRect(canvas, trimmedRect, cropInset);
   }
 
   return { imageUrl: canvas.toDataURL('image/png'), width: canvas.width, height: canvas.height };
@@ -1470,6 +1531,60 @@ const isAnnotationBandLine = (
   return backgroundRatio > 0.62 && plotRatio < 0.1 && darkRatio > 0.006 && darkRatio < 0.22;
 };
 
+const getRowBlueLabelRatio = (
+  data: Uint8ClampedArray,
+  imageWidth: number,
+  imageHeight: number,
+  x: number,
+  y: number,
+  width: number
+): number => {
+  const inset = Math.max(2, Math.round(width * 0.14));
+  let labelMarks = 0;
+  let samples = 0;
+
+  for (let px = x + inset; px < x + width - inset; px++) {
+    if (px < 0 || y < 0 || px >= imageWidth || y >= imageHeight) {
+      continue;
+    }
+
+    samples++;
+    const i = (y * imageWidth + px) * 4;
+    if (isBlueLabelPixel(data[i], data[i + 1], data[i + 2])) {
+      labelMarks++;
+    }
+  }
+
+  return samples > 0 ? labelMarks / samples : 0;
+};
+
+const getColBlueLabelRatio = (
+  data: Uint8ClampedArray,
+  imageWidth: number,
+  imageHeight: number,
+  x: number,
+  y: number,
+  height: number
+): number => {
+  const inset = Math.max(2, Math.round(height * 0.14));
+  let labelMarks = 0;
+  let samples = 0;
+
+  for (let py = y + inset; py < y + height - inset; py++) {
+    if (x < 0 || py < 0 || x >= imageWidth || py >= imageHeight) {
+      continue;
+    }
+
+    samples++;
+    const i = (py * imageWidth + x) * 4;
+    if (isBlueLabelPixel(data[i], data[i + 1], data[i + 2])) {
+      labelMarks++;
+    }
+  }
+
+  return samples > 0 ? labelMarks / samples : 0;
+};
+
 const getRowDimensionLabelRatio = (
   data: Uint8ClampedArray,
   imageWidth: number,
@@ -1628,6 +1743,7 @@ const shrinkRectPastLabelBands = (
   const { data } = imageData;
   let { x, y, width, height } = rect;
   const aggressiveTrim = hasGreenFrameSideColumns(data, imageWidth, imageHeight, rect);
+  const trimBlueLabels = !aggressiveTrim;
   const maxTrimSteps = aggressiveTrim
     ? Math.max(40, Math.round(height * 0.18))
     : Math.max(16, Math.round(Math.min(width, height) * 0.12));
@@ -1638,6 +1754,8 @@ const shrinkRectPastLabelBands = (
     if (
       height > 8 &&
       (isAnnotationBandLine(data, imageWidth, imageHeight, x, y, width, true) ||
+      (trimBlueLabels &&
+        getRowBlueLabelRatio(data, imageWidth, imageHeight, x, y, width) > 0.008) ||
         (aggressiveTrim &&
           isDimensionLabelBandRow(data, imageWidth, imageHeight, x, y, width)) ||
         isMostlyWhiteMarginRow(data, imageWidth, imageHeight, x, y, width))
@@ -1657,6 +1775,8 @@ const shrinkRectPastLabelBands = (
     if (
       height > 8 &&
       (isAnnotationBandLine(data, imageWidth, imageHeight, x, y + height - 1, width, true) ||
+        (trimBlueLabels &&
+          getRowBlueLabelRatio(data, imageWidth, imageHeight, x, y + height - 1, width) > 0.008) ||
         (aggressiveTrim &&
           (isDimensionLabelBandRow(data, imageWidth, imageHeight, x, y + height - 1, width) ||
             getRowDimensionLabelRatio(data, imageWidth, imageHeight, x, y + height - 1, width) >
@@ -1672,7 +1792,15 @@ const shrinkRectPastLabelBands = (
       trimmed = true;
     }
 
-    if (width > 8 && isAnnotationBandLine(data, imageWidth, imageHeight, x, y, height, false)) {
+    if (
+      width > 8 &&
+      trimBlueLabels &&
+      getColBlueLabelRatio(data, imageWidth, imageHeight, x, y, height) > 0.008
+    ) {
+      x++;
+      width--;
+      trimmed = true;
+    } else if (width > 8 && isAnnotationBandLine(data, imageWidth, imageHeight, x, y, height, false)) {
       x++;
       width--;
       trimmed = true;
@@ -1686,6 +1814,13 @@ const shrinkRectPastLabelBands = (
     }
 
     if (
+      width > 8 &&
+      trimBlueLabels &&
+      getColBlueLabelRatio(data, imageWidth, imageHeight, x + width - 1, y, height) > 0.008
+    ) {
+      width--;
+      trimmed = true;
+    } else if (
       width > 8 &&
       isAnnotationBandLine(data, imageWidth, imageHeight, x + width - 1, y, height, false)
     ) {

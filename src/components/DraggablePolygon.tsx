@@ -25,6 +25,7 @@ export const DraggablePolygon: React.FC<DraggablePolygonProps> = ({
     const polygonRef = useRef<ExtendedPolygon | null>(null);
     const mirrorXRef = useRef<boolean | null>(mirrorX);
     const mirrorYRef = useRef<boolean | null>(mirrorY);
+    const prevMirrorRef = useRef({ mirrorX, mirrorY });
 
     useEffect(() => {
         mirrorXRef.current = mirrorX;
@@ -87,7 +88,21 @@ export const DraggablePolygon: React.FC<DraggablePolygonProps> = ({
             map.removeLayer(polygon);
             polygonRef.current = null;
         };
-    }, [coordinates, houseDataUrl, map, mirrorX, mirrorY]);
+    }, [coordinates, houseDataUrl, map]);
+
+    useEffect(() => {
+        const prev = prevMirrorRef.current;
+        if (prev.mirrorX === mirrorX && prev.mirrorY === mirrorY) {
+            return;
+        }
+        prevMirrorRef.current = { mirrorX, mirrorY };
+
+        if (!polygonRef.current || !houseDataUrl) {
+            return;
+        }
+
+        void reloadImageOverlay(polygonRef.current, mirrorX, mirrorY);
+    }, [mirrorX, mirrorY]);
 
     const cleanupImageOverlay = () => {
         if (imageOverlayRef.current) {

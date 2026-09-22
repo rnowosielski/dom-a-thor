@@ -4,8 +4,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     getPlotImageTargetSrc,
+    isAcceptablePlotImageSize,
     loadPlotImageElement,
-    MIN_PLOT_IMAGE_SIDE,
+    MIN_PLOT_IMAGE_MIN_SIDE,
     normalizeExtradomImageUrl,
 } from '../plotImageCapture.js';
 
@@ -83,6 +84,44 @@ describe('chrome-extension/content.js', () => {
         imageEl.dispatchEvent(new Event('load'));
 
         await expect(loadPromise).resolves.toBeNull();
-        expect(MIN_PLOT_IMAGE_SIDE).toBeGreaterThan(217);
+        expect(isAcceptablePlotImageSize(217, 281)).toBe(false);
+        expect(MIN_PLOT_IMAGE_MIN_SIDE).toBeGreaterThan(217);
+    });
+
+    it('accepts extradom media plot sources that are narrow but tall enough', async () => {
+        document.body.innerHTML = `
+            <div class="location__image">
+                <img
+                    data-name="dzialka"
+                    data-src="https://wpcdn.pl/extradom/media/340891/source"
+                    src="https://i.wpimg.pl/c/x335/wpcdn.pl/extradom/media/340891/source"
+                />
+            </div>
+        `;
+
+        const imageEl = document.querySelector('img');
+        Object.defineProperty(imageEl, 'complete', { configurable: true, value: true });
+        Object.defineProperty(imageEl, 'naturalWidth', {
+            configurable: true,
+            get() {
+                return this.src.includes('wpcdn.pl/extradom/media/340891/source') ? 352 : 335;
+            },
+        });
+        Object.defineProperty(imageEl, 'naturalHeight', {
+            configurable: true,
+            get() {
+                return this.src.includes('wpcdn.pl/extradom/media/340891/source') ? 439 : 418;
+            },
+        });
+
+        const loadPromise = loadPlotImageElement(imageEl);
+        imageEl.src = 'https://wpcdn.pl/extradom/media/340891/source';
+        imageEl.dispatchEvent(new Event('load'));
+
+        const loaded = await loadPromise;
+
+        expect(loaded).toBe(imageEl);
+        expect(isAcceptablePlotImageSize(352, 439)).toBe(true);
+        expect(getPlotImageTargetSrc(loaded)).toBe('https://wpcdn.pl/extradom/media/340891/source');
     });
 });

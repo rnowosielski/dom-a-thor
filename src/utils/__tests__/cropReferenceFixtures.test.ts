@@ -31,4 +31,11 @@ describe('crop reference fixtures', () => {
     expect(reference.height).toBeGreaterThan(780);
     expect(reference.aspect).toBeCloseTo(20.8 / 27.3, 2);
   });
+
+  it('stores Z Charakterem 1 reference crop metadata', () => {
+    const reference = readReference('z-charakterem-1');
+    expect(reference.width).toBeGreaterThan(260);
+    expect(reference.height).toBeGreaterThan(395);
+    expect(reference.aspect).toBeCloseTo(18.25 / 27.35, 2);
+  });
 });

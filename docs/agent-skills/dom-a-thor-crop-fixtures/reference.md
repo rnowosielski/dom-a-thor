@@ -28,6 +28,7 @@ scripts/
 |---------|------------|--------|--------------------|----------------------|
 | Willa Optima 1 | stipple | 19.77 × 23.05 | 341 × 397 | 438 × 442 PNG |
 | HomeKoncept 140 | greenFrame | 20.8 × 27.3 | 606 × 796 | 915 × 1028 JPG |
+| Kubiczny D30 | plainPlot | 20.65 × 26.24 | 598 × 760 | 1559 × 2155 JPG |
 
 ## Known wrong source URLs
 
@@ -50,6 +51,7 @@ scripts/
 | Large top white band (HomeKoncept) | Top margin trim skipped |
 | ~217×281 in extension footer | Lazy-load thumbnail captured before full image |
 | `Plot crop unavailable` on Willa | App min crop width too high (valid ~341px) |
+| ~530×673 with terrace/stairs cut off (Kubiczny) | Plain gray plot sent through green-frame trim pipeline |
 | Tests pass, extension broken | Stale dist, unreloaded tab, or content script not injected |
 
 ## cropQualityExpectations guide
@@ -66,7 +68,9 @@ Set bounds from the **good** reference crop, not the broken one:
 ```
 processPlotImageForOverlay
   → getChosenCropMethodName / cropToInnerRectangle
-  → if stipple && width ≤ 680: enforceMeterAspect → return
+  → detect green lawn side columns on inner crop
+  → if stipple && !greenFrame && width ≤ 680: enforceMeterAspect → return
+  → if !greenFrame: applyPlainPlotTrimPipeline (aspect → trim → optional aspect)
   → else: applyGreenFrameTrimPipeline (trim → aspect → trim loops)
 ```
 

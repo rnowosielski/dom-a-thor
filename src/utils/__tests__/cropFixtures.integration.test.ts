@@ -40,6 +40,24 @@ const cropFixtures = [
     referenceJson: 'homekoncept-140-crop.json',
     maxDifferentPixelRatio: 0,
   },
+  {
+    name: 'kubiczny-d30',
+    sourceFile: 'kubiczny-d30-plot.jpg',
+    meterWidth: 20.65,
+    meterHeight: 26.24,
+    referencePng: 'kubiczny-d30-crop.png',
+    referenceJson: 'kubiczny-d30-crop.json',
+    maxDifferentPixelRatio: 0,
+  },
+  {
+    name: 'z-charakterem-1',
+    sourceFile: 'z-charakterem-1-plot.png',
+    meterWidth: 18.25,
+    meterHeight: 27.35,
+    referencePng: 'z-charakterem-1-crop.png',
+    referenceJson: 'z-charakterem-1-crop.json',
+    maxDifferentPixelRatio: 0,
+  },
 ] as const;
 
 const readReference = (referenceJson: string): CropReference => {
@@ -63,6 +81,20 @@ const cropQualityExpectations = {
     minWidth: 590,
     minHeight: 780,
     maxWidth: 620,
+  },
+  'kubiczny-d30': {
+    maxBottomAnnotationBandRows: 0,
+    maxTopWhiteRatio: 0.5,
+    minWidth: 590,
+    minHeight: 750,
+    maxWidth: 610,
+  },
+  'z-charakterem-1': {
+    maxBottomAnnotationBandRows: 2,
+    maxTopWhiteRatio: 0.95,
+    minWidth: 260,
+    minHeight: 395,
+    maxWidth: 272,
   },
 } as const;
 
