@@ -30,5 +30,13 @@
     "meterWidth": 18.25,
     "meterHeight": 27.35,
     "cropMethod": "stipple"
+  },
+  "z-charakterem-1-wizja-plot.png": {
+    "pageUrl": "https://projektyzwizja.pl/projekty-domow/101%2Cz-charakterem-1",
+    "sourceUrl": "https://projektyzwizja.pl/uploads/projekty/z-charakterem-1/rzuty/z-charakterem1-dzialka_1543842517.png",
+    "locationImageSelector": "#plot-sunshine img.default[data-src*=\"dzialka\"]",
+    "meterWidth": 18.25,
+    "meterHeight": 27.35,
+    "cropMethod": "stipple"
   }
 }

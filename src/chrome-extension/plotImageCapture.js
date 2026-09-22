@@ -29,9 +29,13 @@ export async function waitForImageLoad(imageEl) {
     });
 }
 
-export function normalizeExtradomImageUrl(url) {
+export function normalizePlotImageUrl(url) {
     if (!url) {
         return url;
+    }
+
+    if (url.startsWith('/')) {
+        return new URL(url, window.location.origin).href;
     }
 
     const wpcdnMatch = url.match(/wpcdn\.pl\/(.+)$/);
@@ -42,29 +46,38 @@ export function normalizeExtradomImageUrl(url) {
     return url;
 }
 
+export function normalizeExtradomImageUrl(url) {
+    return normalizePlotImageUrl(url);
+}
+
 export function getPlotImageCandidates() {
     const seen = new Set();
     const candidates = [];
 
-    for (const imageEl of document.querySelectorAll('.location__image img[data-name="dzialka"]')) {
+    const addCandidate = (imageEl) => {
         if (!seen.has(imageEl)) {
             seen.add(imageEl);
             candidates.push(imageEl);
         }
+    };
+
+    for (const imageEl of document.querySelectorAll('.location__image img[data-name="dzialka"]')) {
+        addCandidate(imageEl);
     }
 
     for (const imageEl of document.querySelectorAll('.location__image img')) {
-        if (!seen.has(imageEl)) {
-            seen.add(imageEl);
-            candidates.push(imageEl);
-        }
+        addCandidate(imageEl);
+    }
+
+    for (const imageEl of document.querySelectorAll('#plot-sunshine img.default[data-src*="dzialka"]')) {
+        addCandidate(imageEl);
     }
 
     return candidates;
 }
 
 export function getPlotImageTargetSrc(imageEl) {
-    return normalizeExtradomImageUrl(
+    return normalizePlotImageUrl(
         imageEl.getAttribute('data-src') || imageEl.currentSrc || imageEl.src
     );
 }

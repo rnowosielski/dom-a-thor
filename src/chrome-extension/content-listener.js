@@ -42,6 +42,46 @@ async function fetchLandDetailsFromExtraDom() {
     });
 }
 
+function readWizjaPlotDimension(label) {
+    const heading = [...document.querySelectorAll('h3')].find(
+        (element) => element.textContent.trim() === label
+    );
+    const valueText = heading
+        ?.closest('.d-flex')
+        ?.querySelector('.text-right.font-weight-bold')
+        ?.textContent.trim();
+    const match = valueText?.match(/(?<value>\d{1,3}(?:[.,]\d+)?)/);
+
+    return match ? parseFloat(match.groups.value.replace(',', '.')) : null;
+}
+
+async function fetchLandDetailsFromProjektyZWizja() {
+    const widthM = readWizjaPlotDimension('Min. szerokość działki');
+    const heightM = readWizjaPlotDimension('Min. długość działki');
+
+    const imageEl = await resolvePlotImageElement();
+    const fallbackEl = getPlotImageCandidates()[0] ?? null;
+    const imgUrl =
+        (imageEl && getPlotImageTargetSrc(imageEl)) ||
+        (fallbackEl && getPlotImageTargetSrc(fallbackEl)) ||
+        null;
+
+    if (!widthM || !heightM || !imgUrl) {
+        return null;
+    }
+
+    const imageDataUrl = imageEl ? await getPlotImageDataUrl(imageEl) : null;
+
+    return JSON.stringify({
+        width: widthM,
+        height: heightM,
+        imageUrl: imgUrl,
+        imageDataUrl,
+        sourceWidth: imageEl?.naturalWidth ?? 0,
+        sourceHeight: imageEl?.naturalHeight ?? 0,
+    });
+}
+
 async function fetchLandDetailsFromArchon() {
     const item = [...document.querySelectorAll('.product-data__item')].find(el =>
         el.querySelector('.product-data__title')?.textContent.includes('Minimalne wymiary działki')
@@ -71,6 +111,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         if (window.location.hostname.includes('archon.pl')) {
             fetchLandDetailsFromArchon()
+                .then((data) => sendResponse({ data }))
+                .catch(() => sendResponse({ data: null }));
+            return true;
+        }
+        if (window.location.hostname.includes('projektyzwizja.pl')) {
+            fetchLandDetailsFromProjektyZWizja()
                 .then((data) => sendResponse({ data }))
                 .catch(() => sendResponse({ data: null }));
             return true;

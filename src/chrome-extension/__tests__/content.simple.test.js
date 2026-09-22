@@ -8,6 +8,7 @@ import {
     loadPlotImageElement,
     MIN_PLOT_IMAGE_MIN_SIDE,
     normalizeExtradomImageUrl,
+    normalizePlotImageUrl,
 } from '../plotImageCapture.js';
 
 describe('chrome-extension/content.js', () => {
@@ -18,6 +19,14 @@ describe('chrome-extension/content.js', () => {
     it('normalizes wpcdn urls', () => {
         expect(normalizeExtradomImageUrl('https://example.com/x?file=wpcdn.pl/extradom/plot.jpg')).toBe(
             'https://wpcdn.pl/extradom/plot.jpg'
+        );
+    });
+
+    it('resolves relative plot image urls against the page origin', () => {
+        expect(
+            normalizePlotImageUrl('/uploads/projekty/z-charakterem-1/rzuty/z-charakterem1-dzialka_1543842517.png')
+        ).toBe(
+            `${window.location.origin}/uploads/projekty/z-charakterem-1/rzuty/z-charakterem1-dzialka_1543842517.png`
         );
     });
 
@@ -123,5 +132,48 @@ describe('chrome-extension/content.js', () => {
         expect(loaded).toBe(imageEl);
         expect(isAcceptablePlotImageSize(352, 439)).toBe(true);
         expect(getPlotImageTargetSrc(loaded)).toBe('https://wpcdn.pl/extradom/media/340891/source');
+    });
+
+    it('loads projektyzwizja plot images from lazy-loaded data-src paths', async () => {
+        document.body.innerHTML = `
+            <section id="plot-sunshine">
+                <img
+                    class="default img-fluid lozad"
+                    data-src="/uploads/projekty/z-charakterem-1/rzuty/z-charakterem1-dzialka_1543842517.png"
+                    src=""
+                />
+            </section>
+        `;
+
+        const imageEl = document.querySelector('img');
+        Object.defineProperty(imageEl, 'complete', {
+            configurable: true,
+            get() {
+                return Boolean(this.src);
+            },
+        });
+        Object.defineProperty(imageEl, 'naturalWidth', {
+            configurable: true,
+            get() {
+                return this.src.includes('z-charakterem1-dzialka_1543842517.png') ? 352 : 0;
+            },
+        });
+        Object.defineProperty(imageEl, 'naturalHeight', {
+            configurable: true,
+            get() {
+                return this.src.includes('z-charakterem1-dzialka_1543842517.png') ? 439 : 0;
+            },
+        });
+
+        const targetSrc = `${window.location.origin}/uploads/projekty/z-charakterem-1/rzuty/z-charakterem1-dzialka_1543842517.png`;
+        const loadPromise = loadPlotImageElement(imageEl);
+        imageEl.src = targetSrc;
+        imageEl.dispatchEvent(new Event('load'));
+
+        const loaded = await loadPromise;
+
+        expect(loaded).toBe(imageEl);
+        expect(getPlotImageTargetSrc(loaded)).toBe(targetSrc);
+        expect(isAcceptablePlotImageSize(352, 439)).toBe(true);
     });
 });

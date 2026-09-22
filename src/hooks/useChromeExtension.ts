@@ -12,7 +12,12 @@ export interface LandDetails {
 const CONTENT_SCRIPT_FILE = 'content.js';
 
 const isSupportedProjectPage = (url?: string) =>
-  Boolean(url && (url.includes('extradom.pl') || url.includes('archon.pl')));
+  Boolean(
+    url &&
+      (url.includes('extradom.pl') ||
+        url.includes('archon.pl') ||
+        url.includes('projektyzwizja.pl'))
+  );
 
 const sendMessageToTab = (
   tabId: number
@@ -69,7 +74,9 @@ export const useChromeExtension = () => {
         }
 
         if (!isSupportedProjectPage(activeTab.url)) {
-          setConnectionError('Open an extradom.pl or archon.pl project page first');
+          setConnectionError(
+            'Open an extradom.pl, archon.pl, or projektyzwizja.pl project page first'
+          );
           return;
         }
 
