@@ -59,42 +59,67 @@ npm run package:extension
 
 Output: `dom-a-thor-extension.zip` (manifest, popup, content script, icons, assets only).
 
-## Chrome Web Store API secrets
+## Chrome Web Store API (service account)
 
-Create [OAuth client](https://console.cloud.google.com/) (Desktop app or as in Chrome Web Store API docs),
-link it in the Developer Dashboard, and obtain a **refresh token**.
+CI and `npm run publish:chrome` authenticate with a **Google Cloud service account**
+linked to your Chrome Web Store publisher (no OAuth refresh token or consent screen).
 
-Add GitHub repository secrets:
+Official guide: [Use a service account with the Chrome Web Store API](https://developer.chrome.com/docs/webstore/service-accounts).
+
+### One-time setup
+
+1. [Google Cloud Console](https://console.cloud.google.com/) — create or pick a project.
+2. Enable [Chrome Web Store API](https://console.cloud.google.com/apis/library/chromewebstore.googleapis.com).
+3. **IAM → Service accounts → Create** (no extra IAM roles required for the API key step).
+4. Open the service account → **Keys → Add key → JSON** — download the key file once; store it safely.
+5. [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole) → **Account** (publisher settings) → add the service account **email** (`…@….iam.gserviceaccount.com`).  
+   Google allows **one** service account per publisher.
+
+### GitHub repository secrets
 
 | Secret | Description |
 |--------|-------------|
-| `CHROME_EXTENSION_ID` | From Developer Dashboard after first manual upload |
-| `CHROME_CLIENT_ID` | OAuth client ID |
-| `CHROME_CLIENT_SECRET` | OAuth client secret |
-| `CHROME_REFRESH_TOKEN` | Long-lived refresh token for publish scope |
+| `CHROME_EXTENSION_ID` | e.g. `bklplnceagglphbpbhhnjkogehgidcdg` |
+| `CHROME_SERVICE_ACCOUNT_JSON` | Full contents of the downloaded JSON key file |
 
-Optional:
+Optional repository variable:
 
-| Variable / secret | Description |
-|-------------------|-------------|
-| `CHROME_PUBLISH_TARGET` | `default` (production) or `trustedTesters` (default in CI: `default`) |
+| Variable | Description |
+|----------|-------------|
+| `CHROME_PUBLISH_TARGET` | `default` (production) or `trustedTesters` (CI default: `default`) |
+
+### Local publish
+
+```bash
+npm run build && npm run package:extension
+export CHROME_EXTENSION_ID=bklplnceagglphbpbhhnjkogehgidcdg
+export CHROME_SERVICE_ACCOUNT_KEY=/path/to/service-account-key.json
+npm run publish:chrome
+```
+
+Alternatively set `CHROME_SERVICE_ACCOUNT_JSON` to the raw JSON string (same as the GitHub secret).
+
+Do not commit JSON keys. Rotate the key in Cloud Console if it is ever exposed.
 
 ## Automated release
 
-Push a semver tag:
+Releases run from **CI on push to `main`** when commits follow [Conventional Commits](https://www.conventionalcommits.org/) (see [CONTRIBUTING.md](../CONTRIBUTING.md)).
+
+On each releasable merge, **semantic-release** will:
+
+1. Choose the next semver (`fix:` → patch, `feat:` → minor, `BREAKING CHANGE` / `feat!:` → major)
+2. Update `version.json`, `manifest.json`, and `CHANGELOG.md`
+3. Create a Git tag and GitHub Release with `dom-a-thor-extension.zip`
+4. Publish to the Chrome Web Store when `CHROME_EXTENSION_ID` and `CHROME_SERVICE_ACCOUNT_JSON` are set
+
+**One-time baseline:** if the extension is already at `1.0.1` in the store but the repo has no release tag yet, tag the current `main` commit once:
 
 ```bash
-git tag v1.0.2
-git push origin v1.0.2
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
-The **Release** workflow will:
-
-1. Set `version.json` from the tag
-2. Run tests and production build
-3. Create `dom-a-thor-extension.zip`
-4. Upload and publish to the Chrome Web Store (when secrets are configured)
-5. Attach the zip to the GitHub Release
+The first automatic release after that will bump from `v1.0.1` based on new conventional commits.
 
 First upload must be done **manually** in the Developer Dashboard so Google assigns `CHROME_EXTENSION_ID`.
 

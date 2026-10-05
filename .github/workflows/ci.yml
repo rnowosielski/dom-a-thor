@@ -14,7 +14,25 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
+  commitlint:
+    name: Conventional commits
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR commits
+        uses: wagoid/commitlint-github-action@v6
+
   verify:
     name: Test and build
     runs-on: ubuntu-latest
@@ -33,6 +51,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate latest commit message on main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npx commitlint --last --verbose
+
       - name: Run tests
         run: npm run test:run
 
@@ -41,3 +63,38 @@ jobs:
 
       - name: Package extension zip
         run: npm run package:extension
+
+  release:
+    name: Semantic release
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Semantic release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_SERVICE_ACCOUNT_JSON: ${{ secrets.CHROME_SERVICE_ACCOUNT_JSON }}
+          CHROME_PUBLISH_TARGET: ${{ vars.CHROME_PUBLISH_TARGET || 'default' }}
+        run: npx semantic-release

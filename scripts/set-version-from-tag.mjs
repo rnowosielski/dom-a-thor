@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, writeFileSync } from 'fs';
+import { spawnSync } from 'node:child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -9,13 +9,9 @@ if (!tag) {
   throw new Error('Usage: node scripts/set-version-from-tag.mjs v1.2.3');
 }
 
-const match = tag.match(/^v(\d+\.\d+\.\d+)$/);
-if (!match) {
-  throw new Error(`Tag must look like v1.2.3, received: ${tag}`);
+const scriptPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'set-extension-version.mjs');
+const result = spawnSync(process.execPath, [scriptPath, tag], { stdio: 'inherit' });
+
+if (result.status !== 0) {
+  process.exit(result.status ?? 1);
 }
-
-const version = match[1];
-const rootDir = path.dirname(fileURLToPath(import.meta.url));
-const versionPath = path.join(rootDir, '../src/chrome-extension/version.json');
-
-writeFileSync(versionPath, `${JSON.stringify({ version }, null, 2)}\n`);

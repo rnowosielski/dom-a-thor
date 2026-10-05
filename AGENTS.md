@@ -10,6 +10,7 @@ Project-specific agent skills live in **`docs/agent-skills/`**. Read the relevan
 
 ## Conventions
 
+- Use [Conventional Commits](CONTRIBUTING.md) for all commits; CI runs commitlint and semantic-release on `main`.
 - Edit skill content in `docs/agent-skills/<name>/` only.
 - Cursor stubs in `.cursor/skills/` point here; keep them thin.
 - After crop pipeline changes: `npm run test:run` and `npm run build`.
