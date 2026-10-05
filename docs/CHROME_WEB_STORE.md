@@ -72,7 +72,7 @@ Official guide: [Use a service account with the Chrome Web Store API](https://de
 2. Enable [Chrome Web Store API](https://console.cloud.google.com/apis/library/chromewebstore.googleapis.com).
 3. **IAM → Service accounts → Create** (no extra IAM roles required for the API key step).
 4. Open the service account → **Keys → Add key → JSON** — download the key file once; store it safely.
-5. [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole) → **Account** (publisher settings) → add the service account **email** (`…@….iam.gserviceaccount.com`).  
+5. [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole) → **Account** (publisher settings) → add the service account **email** (`…@….iam.gserviceaccount.com`).
    Google allows **one** service account per publisher.
 
 ### GitHub repository secrets
@@ -81,6 +81,13 @@ Official guide: [Use a service account with the Chrome Web Store API](https://de
 |--------|-------------|
 | `CHROME_EXTENSION_ID` | e.g. `bklplnceagglphbpbhhnjkogehgidcdg` |
 | `CHROME_SERVICE_ACCOUNT_JSON` | Full contents of the downloaded JSON key file |
+
+Keep publishing credentials in GitHub Secrets or the local publishing process
+environment, never in source code or extension assets. Local `.env` files, private
+keys, and credential JSON files are ignored as a safeguard; the publisher reads
+process environment variables and does not load `.env` files itself. Only sanitized
+`.env.example` or `.env.*.example` templates should be committed. Never expose
+publishing secrets through `VITE_*` variables, which can be bundled into client code.
 
 Optional repository variable:
 
