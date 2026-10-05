@@ -249,7 +249,11 @@ const response = await fetch(
 
 ## License
 
-[Add your license information here]
+Dom-A-Thor is released under the [Dom-A-Thor License 1.0](LICENSE).
+
+You may use, modify, and share it freely as part of a project under an [OSI-approved open source license](https://opensource.org/licenses).
+
+Any commercial or other for-profit use (direct or indirect) requires a separate agreement with the copyright holder — see [LICENSE](LICENSE) or contact [rnowosielski on GitHub](https://github.com/rnowosielski).
 
 ## Support
 

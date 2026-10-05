@@ -1,0 +1,58 @@
+Dom-A-Thor License 1.0
+
+Copyright (c) 2026 Rafał Nowosielski
+
+Permission is granted to use, copy, modify, merge, publish, and distribute
+this software and its documentation (the "Software") without fee, subject
+to the conditions below.
+
+1. Free and open source use
+
+   You may use the Software, including in modified form, as part of a
+   "FOSS Project": a software project whose complete source code is
+   publicly available and distributed under a license approved by the Open
+   Source Initiative (https://opensource.org/licenses).
+
+   When you distribute a FOSS Project that includes the Software (or
+   portions of it), you must:
+
+   (a) include a copy of this license with the Software; and
+   (b) keep the Software under this license or place it under an
+       OSI-approved license that is compatible with this license.
+
+2. Commercial and other for-profit use
+
+   Any use of the Software that is not covered by Section 1 requires a
+   separate written agreement with the copyright holder.
+
+   This includes, without limitation, any use in connection with
+   activities that directly or indirectly generate revenue, financial
+   benefit, or commercial advantage, such as:
+
+   - selling or licensing products or services that include the Software;
+   - offering the Software or derivatives as part of a paid or
+     subscription service;
+   - using the Software in internal or client-facing tools for a
+     business, employer, or paying customers;
+   - advertising, sponsorship, or monetization tied to the Software or
+     its functionality.
+
+   For commercial licensing, contact the maintainer via
+   https://github.com/rnowosielski or by opening an issue in the
+   dom-a-thor repository.
+
+3. No trademark grant
+
+   This license does not grant permission to use the name "Dom-A-Thor",
+   logos, or other branding except as required for reasonable attribution
+   in FOSS Projects under Section 1.
+
+4. Disclaimer
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES,
+   OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR
+   OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR
+   THE USE OR OTHER DEALINGS IN THE SOFTWARE.

@@ -2,6 +2,7 @@
   "name": "dom-a-thor",
   "private": true,
   "version": "0.0.0",
+  "license": "LicenseRef-Dom-A-Thor-1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
