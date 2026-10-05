@@ -14,8 +14,10 @@ Until Pages is live, you can temporarily use the GitHub blob URL or host `docs/p
 ## GitHub Pages (privacy policy)
 
 1. Repository **Settings → Pages**
-2. **Build and deployment → Source**: GitHub Actions
-3. Push to `main`; the `pages` workflow publishes `docs/privacy-policy.html`
+2. **Build and deployment → Source**: choose **GitHub Actions** (not “Deploy from a branch”)
+3. If the first workflow run failed with “Get Pages site failed”, save that setting once, then **Actions → Pages → Re-run all jobs**
+
+The workflow uses `enablement: true` so a later run can register the site after step 2.
 
 ## Store listing copy (starter)
 
