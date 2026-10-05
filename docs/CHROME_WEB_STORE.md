@@ -73,6 +73,13 @@ Add GitHub repository secrets:
 | `CHROME_CLIENT_SECRET` | OAuth client secret |
 | `CHROME_REFRESH_TOKEN` | Long-lived refresh token for publish scope |
 
+Keep publishing credentials in GitHub Secrets or the local publishing process
+environment, never in source code or extension assets. Local `.env` files, private
+keys, and credential JSON files are ignored as a safeguard; the publisher reads
+process environment variables and does not load `.env` files itself. Only sanitized
+`.env.example` or `.env.*.example` templates should be committed. Never expose
+publishing secrets through `VITE_*` variables, which can be bundled into client code.
+
 Optional:
 
 | Variable / secret | Description |

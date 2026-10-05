@@ -64,6 +64,15 @@ Copy this checklist and complete every item:
 
 Naming: `{project-slug}-plot.png` in `test-fixtures/`, expected `{project-slug}-crop.png` + `.json` in `test-fixtures/expected/`.
 
+## Temporary captures and execution output
+
+Use `test-fixtures/live/` for disposable live captures, comparison crops, and other
+one-off verification output. This directory is ignored; do not force-add its files.
+Promote a useful capture to a named source fixture and add regression checks before
+committing it. Keep source fixtures, `test-fixtures/expected/` references, and
+user-report screenshots required by tests tracked. Redact personal map views or
+identifiers before adding a new user-report screenshot.
+
 ## Regression tests to extend
 
 | File | Purpose |
