@@ -16,7 +16,8 @@ const isSupportedProjectPage = (url?: string) =>
     url &&
       (url.includes('extradom.pl') ||
         url.includes('archon.pl') ||
-        url.includes('projektyzwizja.pl'))
+        url.includes('projektyzwizja.pl') ||
+        url.includes('mgprojekt.com.pl'))
   );
 
 const sendMessageToTab = (
@@ -75,7 +76,7 @@ export const useChromeExtension = () => {
 
         if (!isSupportedProjectPage(activeTab.url)) {
           setConnectionError(
-            'Open an extradom.pl, archon.pl, or projektyzwizja.pl project page first'
+            'Open a supported project page on extradom.pl, archon.pl, projektyzwizja.pl, or mgprojekt.com.pl first'
           );
           return;
         }

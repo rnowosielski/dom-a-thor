@@ -82,6 +82,50 @@ async function fetchLandDetailsFromProjektyZWizja() {
     });
 }
 
+function readMgProjektPlotDimension(label) {
+    for (const labelEl of document.querySelectorAll('.product__costs-label')) {
+        const normalized = labelEl.textContent.replace(/\s+/g, ' ').trim();
+        if (normalized !== label && normalized !== `${label}:`) {
+            continue;
+        }
+
+        const valueText = labelEl.nextElementSibling?.textContent.trim();
+        const match = valueText?.match(/(?<value>\d{1,3}(?:[.,]\d+)?)/);
+        if (match) {
+            return parseFloat(match.groups.value.replace(',', '.'));
+        }
+    }
+
+    return null;
+}
+
+async function fetchLandDetailsFromMgProjekt() {
+    const widthM = readMgProjektPlotDimension('Min szerokość działki');
+    const heightM = readMgProjektPlotDimension('Min długość działki');
+
+    const imageEl = await resolvePlotImageElement();
+    const fallbackEl = getPlotImageCandidates()[0] ?? null;
+    const imgUrl =
+        (imageEl && getPlotImageTargetSrc(imageEl)) ||
+        (fallbackEl && getPlotImageTargetSrc(fallbackEl)) ||
+        null;
+
+    if (!widthM || !heightM || !imgUrl) {
+        return null;
+    }
+
+    const imageDataUrl = imageEl ? await getPlotImageDataUrl(imageEl) : null;
+
+    return JSON.stringify({
+        width: widthM,
+        height: heightM,
+        imageUrl: imgUrl,
+        imageDataUrl,
+        sourceWidth: imageEl?.naturalWidth ?? 0,
+        sourceHeight: imageEl?.naturalHeight ?? 0,
+    });
+}
+
 async function fetchLandDetailsFromArchon() {
     const item = [...document.querySelectorAll('.product-data__item')].find(el =>
         el.querySelector('.product-data__title')?.textContent.includes('Minimalne wymiary działki')
@@ -117,6 +161,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         if (window.location.hostname.includes('projektyzwizja.pl')) {
             fetchLandDetailsFromProjektyZWizja()
+                .then((data) => sendResponse({ data }))
+                .catch(() => sendResponse({ data: null }));
+            return true;
+        }
+        if (window.location.hostname.includes('mgprojekt.com.pl')) {
+            fetchLandDetailsFromMgProjekt()
                 .then((data) => sendResponse({ data }))
                 .catch(() => sendResponse({ data: null }));
             return true;

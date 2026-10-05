@@ -176,4 +176,29 @@ describe('chrome-extension/content.js', () => {
         expect(getPlotImageTargetSrc(loaded)).toBe(targetSrc);
         expect(isAcceptablePlotImageSize(352, 439)).toBe(true);
     });
+
+    it('loads mgprojekt plot images from sytuacja diagrams', async () => {
+        document.body.innerHTML = `
+            <div class="product__additional__images">
+                <img
+                    src="https://www.mgprojekt.com.pl/media/catalog/product/p/r/projekt_domu_hiacynt_3_-_sytuacja.png"
+                    alt="Projekt domu Hiacynt 3 - sytuacja"
+                    class="additional__images__image"
+                />
+            </div>
+        `;
+
+        const imageEl = document.querySelector('img');
+        Object.defineProperty(imageEl, 'complete', { configurable: true, value: true });
+        Object.defineProperty(imageEl, 'naturalWidth', { configurable: true, value: 526 });
+        Object.defineProperty(imageEl, 'naturalHeight', { configurable: true, value: 600 });
+
+        const loaded = await loadPlotImageElement(imageEl);
+
+        expect(loaded).toBe(imageEl);
+        expect(getPlotImageTargetSrc(loaded)).toBe(
+            'https://www.mgprojekt.com.pl/media/catalog/product/p/r/projekt_domu_hiacynt_3_-_sytuacja.png'
+        );
+        expect(isAcceptablePlotImageSize(526, 600)).toBe(true);
+    });
 });

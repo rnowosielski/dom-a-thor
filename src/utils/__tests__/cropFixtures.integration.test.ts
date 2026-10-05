@@ -58,6 +58,15 @@ const cropFixtures = [
     referenceJson: 'z-charakterem-1-crop.json',
     maxDifferentPixelRatio: 0,
   },
+  {
+    name: 'willa-parkowa-4',
+    sourceFile: 'willa-parkowa-4-plot.png',
+    meterWidth: 27.86,
+    meterHeight: 25.64,
+    referencePng: 'willa-parkowa-4-crop.png',
+    referenceJson: 'willa-parkowa-4-crop.json',
+    maxDifferentPixelRatio: 0,
+  },
 ] as const;
 
 const readReference = (referenceJson: string): CropReference => {
@@ -95,6 +104,13 @@ const cropQualityExpectations = {
     minWidth: 260,
     minHeight: 395,
     maxWidth: 272,
+  },
+  'willa-parkowa-4': {
+    maxBottomAnnotationBandRows: 2,
+    maxTopWhiteRatio: 0.95,
+    minWidth: 450,
+    minHeight: 410,
+    maxWidth: 470,
   },
 } as const;
 

@@ -18,8 +18,24 @@ const isAcceptablePlotSource = (sourceWidth: number, sourceHeight: number) =>
     Math.min(sourceWidth, sourceHeight) >= MIN_PLOT_SOURCE_MIN_SIDE &&
     Math.max(sourceWidth, sourceHeight) >= MIN_PLOT_SOURCE_MAX_SIDE;
 
-const isAcceptablePlotCrop = (cropWidth: number, cropHeight: number) =>
-    cropWidth >= MIN_PLOT_CROP_WIDTH && cropHeight >= MIN_PLOT_CROP_HEIGHT;
+const minPlotCropWidth = (sourceWidth: number) =>
+    sourceWidth > 0
+        ? Math.min(MIN_PLOT_CROP_WIDTH, Math.round(sourceWidth * 0.45))
+        : MIN_PLOT_CROP_WIDTH;
+
+const minPlotCropHeight = (sourceHeight: number) =>
+    sourceHeight > 0
+        ? Math.min(MIN_PLOT_CROP_HEIGHT, Math.round(sourceHeight * 0.68))
+        : MIN_PLOT_CROP_HEIGHT;
+
+const isAcceptablePlotCrop = (
+    cropWidth: number,
+    cropHeight: number,
+    sourceWidth = 0,
+    sourceHeight = 0
+) =>
+    cropWidth >= minPlotCropWidth(sourceWidth) &&
+    cropHeight >= minPlotCropHeight(sourceHeight);
 
 const hasUsableCapturedPlot = (landDetails: {
     imageDataUrl?: string | null;
@@ -63,14 +79,22 @@ function App() {
             let sourceImageUrl = hasUsableCapturedPlot(landDetails)
                 ? landDetails.imageDataUrl!
                 : landDetails.imageUrl;
-            let sourceSizeLabel = hasUsableCapturedPlot(landDetails)
-                ? `${landDetails.sourceWidth}×${landDetails.sourceHeight}`
-                : null;
+            let sourceWidth = landDetails.sourceWidth ?? 0;
+            let sourceHeight = landDetails.sourceHeight ?? 0;
+            let sourceSizeLabel =
+                sourceWidth > 0 && sourceHeight > 0 ? `${sourceWidth}×${sourceHeight}` : null;
             let croppedImageUrl: string | null = null;
             let croppedWidth = 0;
             let croppedHeight = 0;
 
             try {
+                if (!sourceWidth || !sourceHeight) {
+                    const remoteDimensions = await getImageNaturalDimensions(landDetails.imageUrl);
+                    sourceWidth = remoteDimensions.width;
+                    sourceHeight = remoteDimensions.height;
+                    sourceSizeLabel = `${sourceWidth}×${sourceHeight}`;
+                }
+
                 let finalCrop = await processPlotImageForOverlay(
                     sourceImageUrl,
                     width,
@@ -78,12 +102,19 @@ function App() {
                 );
 
                 if (
-                    !isAcceptablePlotCrop(finalCrop.width, finalCrop.height) &&
+                    !isAcceptablePlotCrop(
+                        finalCrop.width,
+                        finalCrop.height,
+                        sourceWidth,
+                        sourceHeight
+                    ) &&
                     sourceImageUrl !== landDetails.imageUrl
                 ) {
                     sourceImageUrl = landDetails.imageUrl;
                     const remoteDimensions = await getImageNaturalDimensions(sourceImageUrl);
-                    sourceSizeLabel = `${remoteDimensions.width}×${remoteDimensions.height}`;
+                    sourceWidth = remoteDimensions.width;
+                    sourceHeight = remoteDimensions.height;
+                    sourceSizeLabel = `${sourceWidth}×${sourceHeight}`;
                     finalCrop = await processPlotImageForOverlay(
                         sourceImageUrl,
                         width,
@@ -100,7 +131,10 @@ function App() {
             }
 
             if (cancelled) return;
-            if (!croppedImageUrl || !isAcceptablePlotCrop(croppedWidth, croppedHeight)) {
+            if (
+                !croppedImageUrl ||
+                !isAcceptablePlotCrop(croppedWidth, croppedHeight, sourceWidth, sourceHeight)
+            ) {
                 console.error('Plot crop unavailable; refusing to render uncropped diagram.');
                 setCropSizeLabel(sourceSizeLabel ? `bad crop · src ${sourceSizeLabel}` : null);
                 return;

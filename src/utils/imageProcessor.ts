@@ -692,7 +692,8 @@ const findChosenCropRect = (
     canvas.width,
     canvas.height,
     meterWidth,
-    meterHeight
+    meterHeight,
+    imageData
   );
 
   if (!cropCandidate) {
@@ -729,11 +730,30 @@ const processImageWithJavaScript = (
   return { imageUrl: canvas.toDataURL('image/png'), width: canvas.width, height: canvas.height };
 };
 
+const isExtradomPlotSurfaceGray = (r: number, g: number, b: number): boolean => {
+  const minChannel = Math.min(r, g, b);
+  const maxChannel = Math.max(r, g, b);
+  const saturation = maxChannel - minChannel;
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+
+  return (
+    saturation < 22 &&
+    minChannel >= 188 &&
+    maxChannel <= 232 &&
+    luminance >= 190 &&
+    luminance <= 230
+  );
+};
+
 const isBackgroundPixel = (r: number, g: number, b: number): boolean => {
   const minChannel = Math.min(r, g, b);
   const maxChannel = Math.max(r, g, b);
   const saturation = maxChannel - minChannel;
   const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+
+  if (isExtradomPlotSurfaceGray(r, g, b)) {
+    return false;
+  }
 
   if (minChannel > 235) {
     return true;
@@ -2238,6 +2258,58 @@ const isRectInside = (inner: CropRect, outer: CropRect): boolean => {
   );
 };
 
+const hasDottedStippleMargins = (
+  imageData: ImageData,
+  width: number,
+  height: number
+): boolean => {
+  const { data } = imageData;
+  const band = Math.max(5, Math.round(Math.min(width, height) * 0.07));
+  let whiteSamples = 0;
+  let texturedWhiteSamples = 0;
+
+  const samplePixel = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) {
+      return;
+    }
+
+    const i = (y * width + x) * 4;
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const minChannel = Math.min(r, g, b);
+
+    if (!isWhiteMarginPixel(r, g, b) && minChannel < 232) {
+      return;
+    }
+
+    whiteSamples++;
+    if (getLocalLuminanceVariance(data, width, height, x, y) > 8) {
+      texturedWhiteSamples++;
+    }
+  };
+
+  for (let x = 0; x < width; x += 3) {
+    for (let y = 0; y < band; y += 3) {
+      samplePixel(x, y);
+    }
+    for (let y = height - band; y < height; y += 3) {
+      samplePixel(x, y);
+    }
+  }
+
+  for (let y = band; y < height - band; y += 3) {
+    for (let x = 0; x < band; x += 3) {
+      samplePixel(x, y);
+    }
+    for (let x = width - band; x < width; x += 3) {
+      samplePixel(x, y);
+    }
+  }
+
+  return whiteSamples > 50 && texturedWhiteSamples / whiteSamples > 0.035;
+};
+
 const isValidCropRect = (rect: CropRect | null, imageWidth: number, imageHeight: number): rect is CropRect => {
   if (!rect || rect.width <= 0 || rect.height <= 0) {
     return false;
@@ -2259,7 +2331,8 @@ const chooseCropCandidate = (
   imageWidth: number,
   imageHeight: number,
   meterWidth?: number,
-  meterHeight?: number
+  meterHeight?: number,
+  imageData?: ImageData
 ): { name: string; rect: CropRect } | null => {
   const imageCenterX = imageWidth / 2;
   const imageCenterY = imageHeight / 2;
@@ -2304,7 +2377,40 @@ const chooseCropCandidate = (
     .sort((a, b) => b.score - a.score);
 
   const best = scored[0];
-  return best ? { name: best.name, rect: best.rect } : null;
+  if (!best) {
+    return null;
+  }
+
+  if (best.name === 'stipple' && imageData) {
+    const plotFill = candidates.find((candidate) => candidate.name === 'plotFill');
+    const preferPlotFill = plotFill && (() => {
+      const stippleArea = best.rect.width * best.rect.height;
+      const plotFillArea = plotFill.rect.width * plotFill.rect.height;
+      const targetAspect =
+        meterWidth && meterHeight && meterWidth > 0 && meterHeight > 0
+          ? meterWidth / meterHeight
+          : null;
+      const plotFillAspect = plotFill.rect.width / plotFill.rect.height;
+      const plotFillAspectOk =
+        !targetAspect || Math.abs(plotFillAspect - targetAspect) <= 0.25;
+
+      if (!plotFillAspectOk) {
+        return false;
+      }
+
+      if (!hasDottedStippleMargins(imageData, imageWidth, imageHeight)) {
+        return true;
+      }
+
+      return plotFillArea > stippleArea * 1.1;
+    })();
+
+    if (preferPlotFill && plotFill) {
+      return { name: 'plotFill', rect: plotFill.rect };
+    }
+  }
+
+  return { name: best.name, rect: best.rect };
 };
 
 const scoreCropCandidate = (

@@ -73,6 +73,12 @@ export function getPlotImageCandidates() {
         addCandidate(imageEl);
     }
 
+    for (const imageEl of document.querySelectorAll(
+        'img.additional__images__image[alt*="sytuacja"], img[src*="_sytuacja"]'
+    )) {
+        addCandidate(imageEl);
+    }
+
     return candidates;
 }
 

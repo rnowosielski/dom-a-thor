@@ -32,6 +32,12 @@ const fixtures = [
     meterWidth: 18.25,
     meterHeight: 27.35,
   },
+  {
+    name: 'willa-parkowa-4',
+    sourceFile: 'willa-parkowa-4-plot.png',
+    meterWidth: 27.86,
+    meterHeight: 25.64,
+  },
 ] as const;
 
 beforeAll(async () => {

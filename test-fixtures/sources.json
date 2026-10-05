@@ -38,5 +38,21 @@
     "meterWidth": 18.25,
     "meterHeight": 27.35,
     "cropMethod": "stipple"
+  },
+  "willa-parkowa-4-plot.png": {
+    "pageUrl": "https://www.extradom.pl/projekt-domu-willa-parkowa-4-WAH1850",
+    "sourceUrl": "https://wpcdn.pl/extradom/media/426680/source",
+    "locationImageSelector": ".location__image img[data-name=\"dzialka\"], .location__image img",
+    "meterWidth": 27.86,
+    "meterHeight": 25.64,
+    "cropMethod": "plainPlot"
+  },
+  "hiacynt-3-plot.png": {
+    "pageUrl": "https://www.mgprojekt.com.pl/hiacynt-3",
+    "sourceUrl": "https://www.mgprojekt.com.pl/media/catalog/product/p/r/projekt_domu_hiacynt_3_-_sytuacja.png",
+    "locationImageSelector": "img.additional__images__image[alt*=\"sytuacja\"]",
+    "meterWidth": 22,
+    "meterHeight": 25.41,
+    "cropMethod": "stipple"
   }
 }
