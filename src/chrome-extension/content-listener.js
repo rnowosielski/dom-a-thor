@@ -42,19 +42,6 @@ async function fetchLandDetailsFromExtraDom() {
     });
 }
 
-function readWizjaPlotDimension(label) {
-    const heading = [...document.querySelectorAll('h3')].find(
-        (element) => element.textContent.trim() === label
-    );
-    const valueText = heading
-        ?.closest('.d-flex')
-        ?.querySelector('.text-right.font-weight-bold')
-        ?.textContent.trim();
-    const match = valueText?.match(/(?<value>\d{1,3}(?:[.,]\d+)?)/);
-
-    return match ? parseFloat(match.groups.value.replace(',', '.')) : null;
-}
-
 async function fetchLandDetailsFromProjektyZWizja() {
     const widthM = readWizjaPlotDimension('Min. szerokość działki');
     const heightM = readWizjaPlotDimension('Min. długość działki');

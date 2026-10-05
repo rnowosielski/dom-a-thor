@@ -142,6 +142,17 @@ export async function resolvePlotImageElement() {
     return bestLoaded;
 }
 
+export function readWizjaPlotDimension(label) {
+    const heading = [...document.querySelectorAll('h3')].find(
+        (element) => element.textContent.trim() === label
+    );
+    const row = heading?.closest('.justify-content-between');
+    const valueText = row?.querySelector('.text-right.font-weight-bold')?.textContent.trim();
+    const match = valueText?.match(/(?<value>\d{1,3}(?:[.,]\d+)?)/);
+
+    return match ? parseFloat(match.groups.value.replace(',', '.')) : null;
+}
+
 export async function getPlotImageDataUrl(imageEl) {
     try {
         const canvas = document.createElement('canvas');

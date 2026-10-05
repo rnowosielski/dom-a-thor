@@ -9,6 +9,7 @@ import {
     MIN_PLOT_IMAGE_MIN_SIDE,
     normalizeExtradomImageUrl,
     normalizePlotImageUrl,
+    readWizjaPlotDimension,
 } from '../plotImageCapture.js';
 
 describe('chrome-extension/content.js', () => {
@@ -132,6 +133,28 @@ describe('chrome-extension/content.js', () => {
         expect(loaded).toBe(imageEl);
         expect(isAcceptablePlotImageSize(352, 439)).toBe(true);
         expect(getPlotImageTargetSrc(loaded)).toBe('https://wpcdn.pl/extradom/media/340891/source');
+    });
+
+    it('reads projektyzwizja plot dimensions from justify-content-between rows', () => {
+        document.body.innerHTML = `
+            <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="d-flex align-items-center">
+                    <h3 class="h5 mb-0 mr-4">Min. szerokość działki</h3>
+                    <div class="btn-question-mark"></div>
+                </span>
+                <span class="text-right font-weight-bold">18,25 m</span>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="d-flex align-items-center">
+                    <h3 class="h5 mb-0 mr-4">Min. długość działki</h3>
+                    <div class="btn-question-mark"></div>
+                </span>
+                <span class="text-right font-weight-bold">27,35 m</span>
+            </div>
+        `;
+
+        expect(readWizjaPlotDimension('Min. szerokość działki')).toBe(18.25);
+        expect(readWizjaPlotDimension('Min. długość działki')).toBe(27.35);
     });
 
     it('loads projektyzwizja plot images from lazy-loaded data-src paths', async () => {
