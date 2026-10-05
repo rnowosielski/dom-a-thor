@@ -5,6 +5,7 @@ import {useLocalStorage} from "./hooks/useLocalStorage";
 import {useChromeExtension} from "./hooks/useChromeExtension";
 import {processPlotImageForOverlay, getImageNaturalDimensions} from "./utils/imageProcessor";
 import {useEffect, useState} from "react";
+import {EXTENSION_VERSION} from "./extensionVersion";
 
 const getIsExtensionPopup = () =>
     typeof window !== 'undefined' && window.location.protocol === 'chrome-extension:';
@@ -205,7 +206,7 @@ function App() {
             />
             {isExtensionPopup && (
                 <div className="extension-version">
-                    v1.0.1
+                    v{EXTENSION_VERSION}
                     {connectionError
                         ? ` · ${connectionError}`
                         : cropSizeLabel

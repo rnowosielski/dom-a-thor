@@ -247,6 +247,16 @@ const response = await fetch(
 7. Push to the branch: `git push origin feature/new-feature`
 8. Submit a pull request
 
+## Chrome Web Store
+
+Production extension zip, privacy policy, OAuth secrets, and tag-based releases are documented in
+[docs/CHROME_WEB_STORE.md](docs/CHROME_WEB_STORE.md).
+
+```bash
+npm run build
+npm run package:extension
+```
+
 ## License
 
 Dom-A-Thor is released under the [Dom-A-Thor License 1.0](LICENSE).

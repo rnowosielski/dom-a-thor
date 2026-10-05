@@ -1,16 +1,22 @@
 {
   "manifest_version": 3,
   "name": "Dom-A-Thor",
-  "description": "This extension triggers on specific websites like extradom.pl, archon.pl, projektyzwizja.pl, and mgprojekt.com.pl.",
+  "short_name": "Dom-A-Thor",
+  "description": "Preview house plot dimensions on your land parcel using supported Polish project catalog sites and optional GUGiK parcel ID lookup.",
   "version": "1.0.1",
-  "permissions": ["storage", "scripting", "tabs"],
+  "permissions": [
+    "storage",
+    "scripting",
+    "tabs"
+  ],
   "host_permissions": [
     "https://www.extradom.pl/*",
     "https://www.archon.pl/*",
     "https://projektyzwizja.pl/*",
     "https://www.mgprojekt.com.pl/*",
     "https://wpcdn.pl/*",
-    "https://i.wpimg.pl/*"
+    "https://i.wpimg.pl/*",
+    "https://uldk.gugik.gov.pl/*"
   ],
   "content_scripts": [
     {
@@ -20,14 +26,19 @@
         "https://projektyzwizja.pl/*",
         "https://www.mgprojekt.com.pl/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_end"
     }
   ],
   "action": {
-    "default_popup": "index.html"
+    "default_popup": "index.html",
+    "default_title": "Dom-A-Thor"
   },
   "icons": {
-    "128": "icon.png"
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
   }
 }

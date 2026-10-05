@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/build-content-script.mjs",
+    "icons:extension": "node scripts/generate-extension-icons.mjs",
+    "build": "node scripts/generate-extension-icons.mjs && node scripts/sync-extension-version.mjs && tsc -b && vite build && node scripts/build-content-script.mjs",
+    "package:extension": "node scripts/package-extension.mjs",
+    "publish:chrome": "node scripts/publish-chrome-extension.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",

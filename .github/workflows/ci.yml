@@ -38,3 +38,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Package extension zip
+        run: npm run package:extension
