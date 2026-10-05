@@ -5,11 +5,10 @@ Dom-A-Thor is packaged from `dist/` into `dom-a-thor-extension.zip` for upload t
 
 ## Privacy policy URL
 
-After GitHub Pages is enabled (see below), use:
+Use this URL in the Chrome Web Store listing (both work; prefer the shorter site root after deploy):
 
-`https://rnowosielski.github.io/dom-a-thor/privacy-policy.html`
-
-Until Pages is live, you can temporarily use the GitHub blob URL or host `docs/privacy-policy.html` elsewhere.
+- **https://rnowosielski.github.io/dom-a-thor/** (redirects to the policy)
+- **https://rnowosielski.github.io/dom-a-thor/privacy-policy.html**
 
 ## GitHub Pages (privacy policy)
 
