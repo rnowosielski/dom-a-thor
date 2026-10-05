@@ -42,6 +42,8 @@ npm install
 npm run dev
 ```
 
+Commit messages must follow [Conventional Commits](CONTRIBUTING.md) (enforced by Husky and CI). Merges to `main` with `fix:` / `feat:` commits trigger an automatic semver release, GitHub Release, and Chrome Web Store upload when secrets are configured.
+
 ## Available Scripts
 
 ### Development Commands
